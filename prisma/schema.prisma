@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String    @id @default(cuid())
+  name        String
+  avatar      String?   // initials or color
+  createdAt   DateTime  @default(now())
+  sessions    Session[]
+  bookmarks   Bookmark[]
+  notes       Note[]
+  highlights  Highlight[]
+}
+
+model Session {
+  id          String    @id @default(cuid())
+  userId      String
+  topic       String
+  depth       String    @default("Advanced") // Beginner | Advanced | Interview-Ready
+  source      String    @default("topic")    // topic | file
+  fileName    String?
+  status      String    @default("researching") // researching | complete | error
+  report      String?   // Full markdown output
+  sections    String?   // JSON array of section titles
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookmarks   Bookmark[]
+  notes       Note[]
+  highlights  Highlight[]
+}
+
+model Bookmark {
+  id          String    @id @default(cuid())
+  userId      String
+  sessionId   String
+  sectionId   String    // which section was bookmarked
+  sectionTitle String
+  createdAt   DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session     Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
+
+model Note {
+  id          String    @id @default(cuid())
+  userId      String
+  sessionId   String
+  sectionId   String
+  content     String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session     Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
+
+model Highlight {
+  id          String    @id @default(cuid())
+  userId      String
+  sessionId   String
+  sectionId   String
+  text        String    // the highlighted text
+  color       String    @default("yellow") // yellow | orange | green
+  startOffset Int
+  endOffset   Int
+  createdAt   DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session     Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
